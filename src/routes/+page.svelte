@@ -1,156 +1,156 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  // 候选词数据（示例）
+  let candidates: string[] = ["候选词1", "候选词2", "候选词3", "候选词4"];
+  let pageIndex = 0; // 当前页码
+  const pageSize = 4; // 每页显示数
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  // 从 Rust 后端获取候选词（IPC通信）
+  async function fetchCandidates(input: string) {
+    candidates = await invoke("get_candidates", { input });
   }
+
+  // 处理键盘事件（翻页/选择）
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === "PageDown") pageIndex++;
+    else if (e.key === "PageUp") pageIndex--;
+    else if (e.key >= "1" && e.key <= "9") {
+      const index = parseInt(e.key) - 1;
+      if (index < candidates.length) selectCandidate(index);
+    }
+  }
+
+  let selectedIndex = 0;
+  // 选择候选词后通知 Rust 后端
+  function selectCandidate(index: number) {
+    selectedIndex = index;
+    console.log("选择候选词:", candidates[index]);
+    invoke("select_candidate", { index });
+  }
+
+  // 初始化键盘监听
+  onMount(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
-
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
+<div class="candidate-bar">
+  <div class="candidate-list">
+    {#each candidates.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize) as candidate, i}
+      <div 
+        class="candidate-item"
+        class:selected={selectedIndex === i}
+        on:click={() => selectCandidate(i)}
+      >
+        <!-- 序号样式改为蓝色背景白色文字 -->
+        <span class="index">{i + 1}</span>
+        <span class="text">{candidate}</span>
+      </div>
+    {/each}
   </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
-</main>
+  
+  <!-- 修改分页控件为下拉箭头 -->
+  <div class="pagination">
+    <button class="dropdown-btn" on:click={() => pageIndex++}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 9L12 15L18 9" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+</div>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  /* 整体容器样式 */
+  .candidate-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 0px;
+    background: #5f6165; /* 浅灰色背景 */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   }
 
-  a:hover {
-    color: #24c8db;
+  /* 候选词列表横向排列 */
+  .candidate-list {
+    display: flex;
+    flex-wrap: nowrap;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  /* 候选词项样式 */
+  .candidate-item {
+    display: flex;
+    align-items: center;
+    padding: 0px 10px 0px 0px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  /* 序号样式 - 蓝色背景白色文字 */
+  .index {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 24px;
+    color: white; /* 白色文字 */
+    font-size: 8px;
+    font-weight: 500;
+    border-radius: 4px;
+    padding: 0px 5px 0px 5px;
+  }
+
+  /* 候选词文字样式 */
+  .text {
+    color: white;
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  /* 选中状态样式 */
+  .candidate-item.selected {
+    background: #007aff; /* 蓝色背景 */
+  }
+  
+  .candidate-item.selected .text .index {
+    color: white; /* 白色文字 */
+  }
+  
+
+  /* 分页控件样式 */
+  .pagination {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+  }
+
+  /* 下拉按钮样式 */
+  .dropdown-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  
+  .dropdown-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+  
+  .dropdown-btn svg {
+    transition: transform 0.2s;
+  }
+  
+  .dropdown-btn:hover svg {
+    transform: translateY(2px);
+  }
 </style>

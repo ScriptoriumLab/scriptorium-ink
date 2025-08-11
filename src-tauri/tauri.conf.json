@@ -10,11 +10,19 @@
     "frontendDist": "../build"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "title": "modian-ui",
-        "width": 800,
-        "height": 600
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "resizable": false,
+        "focus": false,
+        "width": 395,
+        "height": 24,
+        "minWidth": 395,
+        "minHeight": 24
       }
     ],
     "security": {

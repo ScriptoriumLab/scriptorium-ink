@@ -69,7 +69,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0px 0px;
-    background: #5f6165; /* 浅灰色背景 */
+    background: #36383e;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -85,8 +85,8 @@
   .candidate-item {
     display: flex;
     align-items: center;
-    padding: 0px 10px 0px 0px;
-    border-radius: 4px;
+    padding: 4px 10px 4px 0px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
   }
@@ -98,7 +98,7 @@
     justify-content: center;
     width: 14px;
     height: 24px;
-    color: white; /* 白色文字 */
+    color: #737373;
     font-size: 8px;
     font-weight: 500;
     border-radius: 4px;
@@ -116,12 +116,12 @@
   .candidate-item.selected {
     background: #007aff; /* 蓝色背景 */
   }
-  
-  .candidate-item.selected .text .index {
-    color: white; /* 白色文字 */
+
+  .candidate-item.selected .index {
+    background: #007aff; /* 蓝色背景 */
+    color: white;
   }
   
-
   /* 分页控件样式 */
   .pagination {
     display: flex;

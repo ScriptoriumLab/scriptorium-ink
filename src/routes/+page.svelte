@@ -1,16 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import { listen } from "@tauri-apps/api/event";
 
   // 候选词数据（示例）
   let candidates: string[] = ["候选词1", "候选词2", "候选词3", "候选词4"];
   let pageIndex = 0; // 当前页码
   const pageSize = 4; // 每页显示数
-
-  // 从 Rust 后端获取候选词（IPC通信）
-  async function fetchCandidates(input: string) {
-    candidates = await invoke("get_candidates", { input });
-  }
 
   // 处理键盘事件（翻页/选择）
   function handleKeyDown(e: KeyboardEvent) {
@@ -26,7 +22,6 @@
   // 选择候选词后通知 Rust 后端
   function selectCandidate(index: number) {
     selectedIndex = index;
-    console.log("选择候选词:", candidates[index]);
     invoke("select_candidate", { index });
   }
 

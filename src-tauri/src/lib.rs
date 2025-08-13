@@ -1,26 +1,24 @@
 use std::time::Duration;
-use tokio::time::{sleep};
-
 use tauri::{AppHandle, Emitter};
+
+const CANDIDATES: &[&str] = &[
+    "候选词1",
+    "候选词2",
+    "候选词3",
+    "候选词4",
+    "候选词5"
+];
 
 #[tauri::command]
 async fn process_input(app: AppHandle) -> Result<(), String> {
-    let candidates = vec![
-        format!("候选词1"),
-        format!("候选词2"),
-        format!("候选词3"),
-        format!("候选词4"),
-        format!("候选词5")
-    ];
-    
-    app.emit("candidate_update", candidates).unwrap();
+    app.emit("candidate_update", CANDIDATES).unwrap();
 
     Ok(())
 }
 
 #[tauri::command]
 fn select_candidate(index: usize) {
-    println!("Selected index: {}", index);
+    println!("Selected index: {}, and candidate is: {}", index, CANDIDATES[index]);
 }
 
 pub fn run() {

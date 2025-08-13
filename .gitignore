@@ -133,4 +133,7 @@ package
 
 node_modules/
 
+.DS_Store
+src-tauri/.DS_Store
+
 # End of https://www.toptal.com/developers/gitignore/api/svelte,rust,clion+all,visualstudiocode

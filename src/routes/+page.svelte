@@ -30,6 +30,17 @@
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
+
+  onMount(async () => {
+    const unlisten = await listen<string[]>("candidate_update", (event) => {
+      candidates = event.payload; // 直接更新候选词数组
+      pageIndex = 0;
+      selectedIndex = 0;
+      console.log("收到候选词:", candidates);
+    });
+
+    return () => unlisten();
+  });
 </script>
 
 <div class="candidate-bar">

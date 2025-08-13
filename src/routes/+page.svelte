@@ -4,24 +4,52 @@
   import { listen } from "@tauri-apps/api/event";
 
   // 候选词数据（示例）
-  let candidates: string[] = ["候选词1", "候选词2", "候选词3", "候选词4"];
+  let candidates: string[] = [];
   let pageIndex = 0; // 当前页码
   const pageSize = 4; // 每页显示数
+  let selectedIndex: number = 0;
 
-  // 处理键盘事件（翻页/选择）
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === "PageDown") pageIndex++;
-    else if (e.key === "PageUp") pageIndex--;
-    else if (e.key >= "1" && e.key <= "9") {
-      const index = parseInt(e.key) - 1;
-      if (index < candidates.length) selectCandidate(index);
+    const currentPageCount = Math.min(
+      pageSize, 
+      candidates.length - pageIndex * pageSize
+    );
+
+    switch(e.key) {
+      case "ArrowLeft":
+        if (pageIndex * pageSize + selectedIndex > 0) {
+          if (selectedIndex > 0) {
+            --selectedIndex;
+          } else {
+            --pageIndex;
+            selectedIndex = pageSize - 1;
+          }
+        }
+        break;
+      case "ArrowRight":
+        if (pageIndex * pageSize + selectedIndex < candidates.length - 1) {
+          if (selectedIndex < currentPageCount - 1) {
+            ++selectedIndex;
+          } else {
+            ++pageIndex;
+            selectedIndex = 0;
+          }
+        }
+        break;
+      case " ":
+        selectCandidate(pageIndex * pageSize + selectedIndex);
+        break;
+      // 数字键直接选择
+      case "1": case "2": case "3": case "4": case "5":
+      case "6": case "7": case "8": case "9":
+        const index = parseInt(e.key) - 1;
+        if (index < currentPageCount) selectCandidate(pageIndex * pageSize + index);
+        break;
     }
   }
 
-  let selectedIndex = 0;
   // 选择候选词后通知 Rust 后端
   function selectCandidate(index: number) {
-    selectedIndex = index;
     invoke("select_candidate", { index });
   }
 
@@ -49,7 +77,7 @@
       <div 
         class="candidate-item"
         class:selected={selectedIndex === i}
-        on:click={() => selectCandidate(i)}
+        on:click={() => selectCandidate(pageIndex * pageSize + i)}
       >
         <!-- 序号样式改为蓝色背景白色文字 -->
         <span class="index">{i + 1}</span>

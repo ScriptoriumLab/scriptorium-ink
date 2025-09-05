@@ -16,6 +16,7 @@
       {
         "title": "modian-ui",
         "transparent": true,
+        "skipTaskbar": true,
         "decorations": false,
         "alwaysOnTop": true,
         "resizable": false,

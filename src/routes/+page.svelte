@@ -84,7 +84,7 @@
 <div class="candidate-bar">
   <div class="candidate-list">
     {#each candidates.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize) as candidate, i}
-      <div 
+      <button
         class="candidate-item"
         class:selected={selectedIndex === i}
         on:click={() => selectCandidate(pageIndex * pageSize + i)}
@@ -92,7 +92,7 @@
         <!-- 序号样式改为蓝色背景白色文字 -->
         <span class="index">{i + 1}</span>
         <span class="text">{candidate}</span>
-      </div>
+      </button>
     {/each}
   </div>
   
@@ -109,6 +109,10 @@
 {/if}
 
 <style>
+  button {
+    all: unset;
+  }
+
   /* 整体容器样式 */
   .candidate-bar {
     display: flex;

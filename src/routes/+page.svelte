@@ -99,7 +99,11 @@
   <!-- 修改分页控件为下拉箭头 -->
   <div class="pagination">
     <!-- <button class="dropdown-btn" on:click={() => pageIndex++}> -->
-    <button class="dropdown-btn">
+    <button
+      class="dropdown-btn"
+      aria-label="Next Page"
+      on:click={() => { pageIndex = (pageIndex + 1) % pageSize }}
+    >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M6 9L12 15L18 9" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>

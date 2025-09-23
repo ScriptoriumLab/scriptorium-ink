@@ -80,6 +80,7 @@
   });
 </script>
 
+{#if candidates.length > 0}
 <div class="candidate-bar">
   <div class="candidate-list">
     {#each candidates.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize) as candidate, i}
@@ -105,6 +106,7 @@
     </button>
   </div>
 </div>
+{/if}
 
 <style>
   /* 整体容器样式 */

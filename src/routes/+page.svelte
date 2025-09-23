@@ -1,13 +1,17 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { invoke } from "@tauri-apps/api/core";
-  import { listen } from "@tauri-apps/api/event";
+  import { onMount, onDestroy } from "svelte";
+  import { invoke, Channel } from "@tauri-apps/api/core";
 
-  // 候选词数据（示例）
+  // 定义与 Rust 同步的候选词更新类型
+  type CandidateUpdate = {
+    candidates: string[];
+  };
+
   let candidates: string[] = [];
-  let pageIndex = 0; // 当前页码
-  const pageSize = 4; // 每页显示数
+  let pageIndex = 0;
+  const pageSize = 4;
   let selectedIndex: number = 0;
+  let chan: Channel<CandidateUpdate> | null = null;
 
   function handleKeyDown(e: KeyboardEvent) {
     const currentPageCount = Math.min(
@@ -53,21 +57,26 @@
     invoke("select_candidate", { index });
   }
 
-  // 初始化键盘监听
-  onMount(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  });
-
   onMount(async () => {
-    const unlisten = await listen<string[]>("candidate_update", (event) => {
-      candidates = event.payload; // 直接更新候选词数组
+    window.addEventListener("keydown", handleKeyDown);
+
+    // 创建并注册 Channel，只需调用一次
+    chan = new Channel<CandidateUpdate>();
+    chan.onmessage = (msg) => {
+      candidates = msg.candidates;
       pageIndex = 0;
       selectedIndex = 0;
-      console.log("收到候选词:", candidates);
-    });
+    };
+    await invoke("register_candidate_channel", { channel: chan });
 
-    return () => unlisten();
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  });
+
+  // Svelte 专用的组件卸载钩子，确保关闭 Channel
+  onDestroy(() => {
+    if (chan) chan.close();
   });
 </script>
 

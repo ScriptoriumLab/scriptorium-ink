@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex};
 use tauri::{ipc::Channel, AppHandle, Manager, State};
 use serde::Serialize;
 use tokio::time::{sleep, Duration};

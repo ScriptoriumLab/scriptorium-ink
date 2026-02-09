@@ -14,7 +14,7 @@ const initialState: RenderState = {
     visible: true,
     x: 0.0,
     y: 0.0,
-    candidates: [""],
+    candidates: [],
     highlight_index: 0,
     page_index: 0,
     total_pages: 1

@@ -1,115 +1,47 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
-  import { invoke, Channel } from "@tauri-apps/api/core";
-
-  // 定义与 Rust 同步的候选词更新类型
-  type CandidateUpdate = {
-    candidates: string[];
-  };
-
-  let candidates: string[] = [];
-  let pageIndex = 0;
-  const pageSize = 4;
-  let selectedIndex: number = 0;
-  let chan: Channel<CandidateUpdate> | null = null;
-
-  function handleKeyDown(e: KeyboardEvent) {
-    const currentPageCount = Math.min(
-      pageSize, 
-      candidates.length - pageIndex * pageSize
-    );
-
-    switch(e.key) {
-      case "ArrowLeft":
-        if (pageIndex * pageSize + selectedIndex > 0) {
-          if (selectedIndex > 0) {
-            --selectedIndex;
-          } else {
-            --pageIndex;
-            selectedIndex = pageSize - 1;
-          }
-        }
-        break;
-      case "ArrowRight":
-        if (pageIndex * pageSize + selectedIndex < candidates.length - 1) {
-          if (selectedIndex < currentPageCount - 1) {
-            ++selectedIndex;
-          } else {
-            ++pageIndex;
-            selectedIndex = 0;
-          }
-        }
-        break;
-      case " ":
-        selectCandidate(pageIndex * pageSize + selectedIndex);
-        break;
-      // 数字键直接选择
-      case "1": case "2": case "3": case "4": case "5":
-      case "6": case "7": case "8": case "9":
-        const index = parseInt(e.key) - 1;
-        if (index < currentPageCount) selectCandidate(pageIndex * pageSize + index);
-        break;
-    }
-  }
-
-  // 选择候选词后通知 Rust 后端
-  function selectCandidate(index: number) {
-    invoke("select_candidate", { index });
-  }
+  import { onMount } from "svelte";
+  import { listen } from "@tauri-apps/api/event";
+  import { invoke } from "@tauri-apps/api/core";
+  import { uiState, type RenderState } from "$lib/stores/ui";
 
   onMount(async () => {
-    window.addEventListener("keydown", handleKeyDown);
-
-    // 创建并注册 Channel，只需调用一次
-    chan = new Channel<CandidateUpdate>();
-    chan.onmessage = (msg) => {
-      candidates = msg.candidates;
-      pageIndex = 0;
-      selectedIndex = 0;
-    };
-    await invoke("register_candidate_channel", { channel: chan });
+    const unlisten = await listen<RenderState>("render_update", (event) => {
+      uiState.set(event.payload);
+    });
 
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
+      unlisten();
     };
   });
 
-  // Svelte 专用的组件卸载钩子，确保关闭 Channel
-  onDestroy(() => {
-    if (chan) chan.close();
-  });
+  function handleCandidateClick(index: number) {
+    invoke("select_candidate", { index });
+  }
 </script>
 
-{#if candidates.length > 0}
-<div class="candidate-bar">
-  <div class="candidate-list">
-    {#each candidates.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize) as candidate, i}
-      <button
-        class="candidate-item"
-        class:selected={selectedIndex === i}
-        on:click={() => selectCandidate(pageIndex * pageSize + i)}
-      >
-        <!-- 序号样式改为蓝色背景白色文字 -->
-        <span class="index">{i + 1}</span>
-        <span class="text">{candidate}</span>
-      </button>
-    {/each}
+{#if $uiState.visible && $uiState.candidates.length > 0}
+  <div class="candidate-bar">
+    <div class="candidate-list">
+      {#each $uiState.candidates as candidate, i}
+        <button
+          class="candidate-item"
+          class:selected={$uiState.highlight_index === i}
+          on:click={() => handleCandidateClick(i)}
+        >
+          <span class="index" class:selected-index={$uiState.highlight_index === i}>
+            {i + 1}
+          </span>
+          <span class="text">{candidate}</span>
+        </button>
+      {/each}
+    </div>
+    
+    <div class="pagination">
+        <button class="dropdown-btn">
+             V
+        </button>
+    </div>
   </div>
-  
-  <!-- 修改分页控件为下拉箭头 -->
-  <div class="pagination">
-    <!-- <button class="dropdown-btn" on:click={() => pageIndex++}> -->
-    <button
-      class="dropdown-btn"
-      aria-label="Next Page"
-      on:click={() => { pageIndex = (pageIndex + 1) % pageSize }}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 9L12 15L18 9" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-  </div>
-</div>
 {/if}
 
 <style>
@@ -157,6 +89,10 @@
     font-weight: 500;
     border-radius: 4px;
     padding: 0px 5px 0px 5px;
+  }
+
+  .index.selected-index {
+    color: white;
   }
 
   /* 候选词文字样式 */

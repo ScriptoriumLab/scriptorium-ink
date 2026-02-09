@@ -1,60 +1,54 @@
-use std::sync::{Mutex};
-use tauri::{ipc::Channel, AppHandle, Manager, State};
-use serde::Serialize;
+mod domain;
+
+use crate::domain::RenderState;
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::time::{sleep, Duration};
 
-const CANDIDATES: &[&str] = &[
-    "候选词1",
-    "候选词2",
-    "候选词3",
-    "候选词4",
-    "候选词5"
-];
+// 模拟 Inkstone 的行为 (Mock Driver)
+fn start_mock_driver(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        let mut index = 0;
+        let candidates = vec![
+            "你好", "拟好", "泥壕", "逆号", "尼耗"
+        ];
+        
+        loop {
+            sleep(Duration::from_millis(1000)).await;
+            
+            // 模拟：每秒钟光标移动一次
+            index = (index + 1) % candidates.len();
 
-#[derive(Clone, Serialize)]
-struct CandidateUpdate {
-    candidates: Vec<&'static str>,
-}
+            let state = RenderState {
+                visible: true,
+                candidates: candidates.iter().map(|s| s.to_string()).collect(),
+                highlight_index: index, // 告诉前端高亮哪一个
+                page_index: 0,
+                total_pages: 1,
+            };
 
-// 用于存储前端传入的 Channel 句柄
-struct CandidateChannel(Mutex<Option<Channel<CandidateUpdate>>>);
-
-#[tauri::command]
-// 前端调用一次，用于注册监听通道
-fn register_candidate_channel(channel: Channel<CandidateUpdate>, state: State<CandidateChannel>) {
-    *state.0.lock().unwrap() = Some(channel);
+            // 🔥 核心：发送事件给前端
+            // 以后这里会替换成从 Pipe 读取数据
+            app.emit("render_update", state).unwrap();
+        }
+    });
 }
 
 #[tauri::command]
 fn select_candidate(index: usize) {
-    println!("Selected index: {}, and candidate is: {}", index, CANDIDATES[index]);
-}
-
-// 该函数在收到 modian-win 的候选更新时被调用
-fn on_candidates_from_core(app: &AppHandle, update: CandidateUpdate) {
-    if let Some(ref chan) = *app.state::<CandidateChannel>().0.lock().unwrap() {
-        chan.send(update).unwrap();
-    }
+    println!("Frontend User Clicked Index: {}", index);
 }
 
 pub fn run() {
     tauri::Builder::default()
-        .manage(CandidateChannel(Mutex::new(None)))
         .setup(|app| {
-            let app_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                sleep(Duration::from_secs(3)).await;
-                let update = CandidateUpdate {
-                    candidates: CANDIDATES.to_vec(),
-                };
-                on_candidates_from_core(&app_handle, update);
-            });
+            let handle = app.handle().clone();
+            
+            start_mock_driver(handle);
+            
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            register_candidate_channel,
-            select_candidate
-        ])
+        .invoke_handler(tauri::generate_handler![select_candidate])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

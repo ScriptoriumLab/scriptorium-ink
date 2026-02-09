@@ -1,4 +1,5 @@
 mod domain;
+mod infra;
 
 use crate::domain::RenderState;
 use std::sync::Mutex;
@@ -42,6 +43,10 @@ fn select_candidate(index: usize) {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            let win = app.get_webview_window("main").unwrap();
+            #[cfg(target_os = "windows")]
+            infra::window::set_input_window_style(&win);
+
             let handle = app.handle().clone();
             
             start_mock_driver(handle);

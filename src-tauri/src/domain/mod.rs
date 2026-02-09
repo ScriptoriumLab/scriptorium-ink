@@ -24,3 +24,12 @@ impl Default for RenderState {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "payload")] // 这样生成的 JSON 类似于 { "type": "Select", "payload": 1 }
+pub enum UserAction {
+    SelectCandidate(usize), // 用户点了第几个
+    PageNext,               // 用户点了下一页（以后用）
+    PagePrev,               // 用户点了上一页
+    Quit,                   // 比如右键关闭（以后用）
+}

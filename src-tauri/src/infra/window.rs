@@ -13,11 +13,11 @@ pub fn set_input_window_style<R: Runtime>(window: &WebviewWindow<R>) {
     unsafe {
         let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
 
-        let new_ex_style = ex_style | (WS_EX_NOACTIVATE.0 as i32) | (WS_EX_TOOLWINDOW.0 as i32);
+        let new_ex_style = ex_style | (WS_EX_NOACTIVATE.0 as i32) | (WS_EX_TOOLWINDOW.0 as i32) | (WS_EX_TOPMOST.0 as i32);
         
         SetWindowLongW(hwnd, GWL_EXSTYLE, new_ex_style);
 
-        SetWindowPos(
+        let _ = SetWindowPos(
             hwnd,
             HWND_TOPMOST,
             0, 0, 0, 0,

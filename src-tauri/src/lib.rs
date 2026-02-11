@@ -2,8 +2,8 @@ mod domain;
 mod infra;
 
 use crate::domain::UserAction;
-use crate::infra::{ipc, window}; // 引入 ipc 和 window
-use tauri::{AppHandle, Manager, State};
+use crate::infra::{ipc};
+use tauri::{Manager, State};
 
 #[tauri::command]
 async fn select_candidate(index: usize, state: State<'_, ipc::IpcSender>) -> Result<(), ()> {

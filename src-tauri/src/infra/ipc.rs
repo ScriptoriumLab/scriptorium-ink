@@ -10,7 +10,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE
 };
 
-const PIPE_NAME: &str = r"\\.\pipe\modian_ui_protocol_pipe";
+const UI_PROTOCOL_PIPE_NAME: &str = r"\\.\pipe\modian_ui_protocol_pipe";
 
 pub struct IpcSender(pub Arc<Mutex<Option<WriteHalf<NamedPipeClient>>>>);
 
@@ -39,12 +39,12 @@ pub fn start_listening(app: AppHandle) {
 
     tauri::async_runtime::spawn(async move {
         loop {
-            println!("IPC: Connecting to {}...", PIPE_NAME);
+            println!("IPC: Connecting to {}...", UI_PROTOCOL_PIPE_NAME);
             
             match ClientOptions::new()
                 .read(true)
                 .write(true)
-                .open(PIPE_NAME) {
+                .open(UI_PROTOCOL_PIPE_NAME) {
                     Ok(client) => {
                         println!("IPC: Connected!");
                         handle_connection(client, &app_handle).await;

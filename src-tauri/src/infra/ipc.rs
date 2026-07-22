@@ -10,7 +10,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
     ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE
 };
 
-const UI_PROTOCOL_PIPE_NAME: &str = r"\\.\pipe\modian_ui_protocol_pipe";
+const UI_PROTOCOL_PIPE_NAME: &str = r"\\.\pipe\scriptorium_ui_protocol_pipe";
 
 pub struct IpcSender(pub Arc<Mutex<Option<WriteHalf<NamedPipeClient>>>>);
 

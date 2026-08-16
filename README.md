@@ -1,5 +1,7 @@
 # Scriptorium Ink
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 > The stateless UI renderer for the Scriptorium input method ecosystem.
 
 **Scriptorium Ink** is the presentation layer of Scriptorium.
@@ -168,4 +170,4 @@ See `LICENSE` for details.
 
 ---
 
-Copyright © 2026 ScriptoriumLab.
+*Copyright © 2026 ScriptoriumLab.*
